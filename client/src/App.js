@@ -8,6 +8,8 @@ import CardMedia from "@material-ui/core/CardMedia";
 import CardContent from "@material-ui/core/CardContent";
 import Button from "@material-ui/core/Button";
 import MicIcon from "@material-ui/icons/Mic";
+import Typography from "@material-ui/core/Typography";
+import RecordVoiceOverIcon from "@material-ui/icons/RecordVoiceOver";
 export default class App extends React.Component {
   constructor(props) {
     super(props);
@@ -15,6 +17,8 @@ export default class App extends React.Component {
       record: false,
       blobObject: null,
       result: "",
+      recording: false,
+      blobURL: "",
     };
   }
 
@@ -29,15 +33,28 @@ export default class App extends React.Component {
   onData(recordedBlob) {
     console.log("chunk of real-time data is: ", recordedBlob);
   }
-
-  onStop(recordedBlob) {
+  saveByteArray = (() => {
+    var a = document.createElement("a");
+    document.body.appendChild(a);
+    a.style = "display: none";
+    return function (url, name) {
+      a.href = url;
+      a.download = name;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    };
+  })();
+  onStop = (recordedBlob) => {
     console.log("recordedBlob is: ", recordedBlob);
-  }
+    // const blobURL = URL.createObjectURL(recordedBlob);
+    this.setState({ blobURL: recordedBlob.blobUrl, isRecording: false });
+    this.saveByteArray([recordedBlob.blobUrl], "../src/test1.wav");
+  };
 
   getResult = async () => {
     try {
       let result = await axios.get("http://localhost:8888/detect");
-      console.log(result);
+      this.setState({ result: result.data.message });
     } catch (error) {
       console.log(error);
     }
@@ -56,7 +73,7 @@ export default class App extends React.Component {
               onStop={this.onStop}
               onData={this.onData}
               noiseSuppression="true"
-              strokeColor="#000000"
+              strokeColor="white"
               backgroundColor="green"
               mimeType="audio/wav"
             />
@@ -81,8 +98,11 @@ export default class App extends React.Component {
                 Stop
               </Button>
             </div>
-            <div>
-              {/* <audio ref="audioSource" controls="controls" src=''/> */}
+            <CardContent style={{ textAlign: "center" }}>
+              <audio ref="audio_tag" src={this.state.blobURL} controls />
+            </CardContent>
+
+            <CardContent style={{ textAlign: "center" }}>
               <Button
                 variant="contained"
                 color="secondary"
@@ -90,8 +110,9 @@ export default class App extends React.Component {
               >
                 Predict
               </Button>
-              <p>Result: {this.state.result}</p>
-            </div>
+            </CardContent>
+            <RecordVoiceOverIcon color="primary" />
+            <Typography variant="h6">Result: {this.state.result}</Typography>
           </CardContent>
         </Card>
       </Container>
