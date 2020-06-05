@@ -75,6 +75,6 @@ def predict_func():
 
 
 if __name__ == '__main__':
-    mfcc = get_mfcc('dmquangj.wav')
+    mfcc = get_mfcc('test.wav')
     result = predict(mfcc)
     print(result)
